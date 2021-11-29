@@ -1,13 +1,13 @@
 import { Select, Form, InputNumber, Button, Tag } from 'antd';
 import { useState, FC } from 'react';
-import herbEffects from '@/libs/herbEffects';
+import herbEffects from '../libs/herbEffects';
 import {
   findHerbRecipe,
   getHerbEffectTagSet,
   targetEffectTagSorter,
   avoidEffectTagSorter,
-} from '@/libs/herbRecipeCalculate';
-import type { ValidHerbRecipe } from '@/libs/herbRecipeCalculate';
+} from '../libs/herbRecipeCalculate';
+import type { ValidHerbRecipe } from '../libs/herbRecipeCalculate';
 
 const { Option, OptGroup } = Select;
 

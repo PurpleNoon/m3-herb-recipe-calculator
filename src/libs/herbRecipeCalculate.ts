@@ -1,9 +1,9 @@
 import { intersection, countBy, flatten, groupBy } from 'lodash';
 import { combinationsWithReplacement } from '@shlappas/itertools';
-import type { HerbEffect } from '@/libs/herbEffects';
+import type { HerbEffect } from '../libs/herbEffects';
 // import herbEffects from '@/libs/herbEffects';
-import herbs from '@/libs/herbs';
-import type { HerbInfo } from '@/libs/herbs';
+import herbs from '../libs/herbs';
+import type { HerbInfo } from '../libs/herbs';
 
 // const herbEffectsSet = keyBy(herbEffects, 'name');
 // const herbSet = keyBy(herbs, 'name');
@@ -97,7 +97,7 @@ export function calculateHerbRecipeEffects(herbRecipe: HerbInfo[]): Potion {
 
 export type ValidHerbRecipe = [HerbInfo[], Potion];
 
-const herbSoltCount = 5;
+const herbSlotCount = 5;
 
 export function findHerbRecipe(
   targetEffects: string[] = [],
@@ -111,7 +111,7 @@ export function findHerbRecipe(
       Boolean(intersection(targetEffects, herb.effects).length),
   );
   notice('startFindHerbRecipes');
-  const herbRecipes = [...combinationsWithReplacement(aimHerbs, herbSoltCount)];
+  const herbRecipes = [...combinationsWithReplacement(aimHerbs, herbSlotCount)];
   notice('calculatePotionsEffect');
   const herbRecipeResults = herbRecipes.map(
     herbRecipe =>

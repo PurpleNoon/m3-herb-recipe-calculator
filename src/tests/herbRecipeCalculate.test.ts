@@ -1,9 +1,9 @@
 import { keyBy } from 'lodash';
 import herbRecipeTestSetContent from './herbRecipeTestSet.json';
 import { checkTestSet, isSamePotion } from './testUtils';
-import { calculateHerbRecipeEffects } from '@/libs/herbRecipeCalculate';
-import type { Potion } from '@/libs/herbRecipeCalculate';
-import herbs from '@/libs/herbs';
+import { calculateHerbRecipeEffects } from '../libs/herbRecipeCalculate';
+import type { Potion } from '../libs/herbRecipeCalculate';
+import herbs from '../libs/herbs';
 
 const herbMap = keyBy(herbs, 'name');
 const herbRecipeTestSet = herbRecipeTestSetContent as [string[], Potion][];
