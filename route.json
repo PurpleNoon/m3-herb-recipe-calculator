@@ -1,0 +1,19 @@
+{
+  "routes": [
+    {
+      "urlPath": "/",
+      "entryName": "main",
+      "entryPath": "main/index.html",
+      "isSPA": true,
+      "isSSR": false,
+      "enableModernMode": true
+    },
+    {
+      "urlPath": "/api",
+      "isApi": true,
+      "entryPath": "",
+      "isSPA": false,
+      "isSSR": false
+    }
+  ]
+}
