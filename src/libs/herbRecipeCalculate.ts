@@ -99,6 +99,7 @@ export type ValidHerbRecipe = [HerbInfo[], Potion];
 
 const herbSlotCount = 5;
 
+// TODO: 拆分该函数，将 top 参数拆出去，后面弄一个单独做对结果处理的函数
 export function findHerbRecipe(
   targetEffects: string[] = [],
   top = 10,
