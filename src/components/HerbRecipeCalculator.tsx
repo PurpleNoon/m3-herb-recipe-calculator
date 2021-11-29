@@ -113,10 +113,12 @@ const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
               <hr />
               作者：泪随樱花落
               <br />
-              QQ: 346014945
+              QQ：346014945
               <br />
               目前还在不断完善中（佛系更新ing），如果有什么好的建议或者发现了
               bug，欢迎联系作者_(:з」∠)_
+              <br />
+              PS: 查找配方时会卡顿，因为配方数量比较大（取决于选择的期望的效果和排除的效果），稍等一会即可
               <hr />
             </div>
             <Form.Item
@@ -173,7 +175,7 @@ const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
             </Form.Item>
             <Form.Item {...tailLayout}>
               <Button type="primary" htmlType="submit">
-                Search
+                查找配方
               </Button>
             </Form.Item>
           </Form>
