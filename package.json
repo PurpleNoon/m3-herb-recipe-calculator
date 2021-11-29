@@ -6,7 +6,7 @@
   "scripts": {
     "reset": "del-cli node_modules",
     "dev": "modern dev",
-    "build": "modern build",
+    "build": "modern build && node ./scripts/copy-html.js",
     "start": "modern start",
     "new": "modern new",
     "lint": "modern lint",
