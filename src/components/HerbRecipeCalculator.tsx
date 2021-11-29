@@ -41,6 +41,7 @@ const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
   // TODO: 算法中排除药剂结果中只有负面效果的药水，或者提供一个 "好友模式" 的选项，整个小问号，进行对 "好友模式" 的说明
   // TODO: 美化界面
   // TODO: 高级模式，功能（暂定）：自定义排序，"好友模式"等
+  // TODO: 更改目前的排序方式，正面效果多的排在前面，效果等级高的，目前没用
   const [searchForm] = useState<HerbSearchForm>({
     targetEffects: ['药水等级提升1级'],
     avoidEffects: [],
@@ -54,6 +55,8 @@ const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
     // eslint-disable-next-line no-console
     console.log(values);
     // TODO: 提供进度条显示
+    // TODO: 添加查询到的配方总数
+    // TODO: 看看能不能降低查询时的卡顿
     // TODO: 拆分 form 和 list 组件
     // typeof search === 'function' && search(searchForm);
     const herbRecipes = findHerbRecipe(
