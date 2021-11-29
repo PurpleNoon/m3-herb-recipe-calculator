@@ -1,6 +1,7 @@
 {
   "name": "m3-herb-recipe-calculator",
   "version": "0.1.0",
+  "homepage": "https://PurpleNoon.github.io/m3-herb-recipe-calculator",
   "author": "泪随樱花落/PurpleNoon",
   "scripts": {
     "reset": "del-cli node_modules",
@@ -68,6 +69,10 @@
     "runtime": {
       "router": true,
       "state": true
+    },
+    "output": {
+      "assetPrefix": "/m3-herb-recipe-calculator",
+      "enableModernMode": true
     }
   }
 }
