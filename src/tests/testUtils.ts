@@ -1,8 +1,8 @@
 import { isEqual, keyBy, flatten, uniq } from 'lodash';
-import type { Potion } from '@/libs/herbRecipeCalculate';
+import type { Potion } from '../libs/herbRecipeCalculate';
 // import type { HerbInfo } from '@/libs/herbs';
-import herbs from '@/libs/herbs';
-import herbEffects from '@/libs/herbEffects';
+import herbs from '../libs/herbs';
+import herbEffects from '../libs/herbEffects';
 
 export function checkTestSet(testSet: [string[], Potion][]) {
   const herbMap = keyBy(herbs, 'name');
