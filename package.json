@@ -72,7 +72,9 @@
     },
     "output": {
       "assetPrefix": "/m3-herb-recipe-calculator",
-      "enableModernMode": true
+      "enableModernMode": true,
+      "htmlPath": "",
+      "disableNodePolyfill": true
     }
   }
 }
