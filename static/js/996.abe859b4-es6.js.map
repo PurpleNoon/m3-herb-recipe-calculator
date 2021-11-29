@@ -1,1 +1,0 @@
-{"version":3,"file":"static/js/996.abe859b4-es6.js","mappings":"sKAEA,UAFc,KAAM","sources":["pages/about.tsx"],"sourcesContent":["const About = () => <div>About page</div>;\n\nexport default About;\n"],"names":[],"sourceRoot":""}

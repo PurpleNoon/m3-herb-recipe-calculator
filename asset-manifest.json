@@ -1,26 +1,25 @@
 {
   "files": {
-    "main.js": "/m3-herb-recipe-calculator/static/js/main.d51de073-es6.js",
-    "runtime-main.js": "/m3-herb-recipe-calculator/static/js/runtime-main.18eaeec3-es6.js",
-    "static/css/881.aecf272b.css": "/m3-herb-recipe-calculator/static/css/881.aecf272b.css",
-    "static/js/881.00c9f614-es6.js": "/m3-herb-recipe-calculator/static/js/881.00c9f614-es6.js",
-    "static/js/996.abe859b4-es6.js": "/m3-herb-recipe-calculator/static/js/996.abe859b4-es6.js",
-    "static/js/81.edca3528-es6.js": "/m3-herb-recipe-calculator/static/js/81.edca3528-es6.js",
-    "static/css/282.a1acd2b5.css": "/m3-herb-recipe-calculator/static/css/282.a1acd2b5.css",
-    "static/js/282.1a924e72-es6.js": "/m3-herb-recipe-calculator/static/js/282.1a924e72-es6.js",
-    "main/index-es6.html": "/m3-herb-recipe-calculator/main/index-es6.html",
-    "route.json": "/m3-herb-recipe-calculator/route.json",
-    "main.d51de073-es6.js.map": "/m3-herb-recipe-calculator/static/js/main.d51de073-es6.js.map",
-    "runtime-main.18eaeec3-es6.js.map": "/m3-herb-recipe-calculator/static/js/runtime-main.18eaeec3-es6.js.map",
-    "881.aecf272b.css.map": "/m3-herb-recipe-calculator/static/css/881.aecf272b.css.map",
-    "881.00c9f614-es6.js.map": "/m3-herb-recipe-calculator/static/js/881.00c9f614-es6.js.map",
-    "996.abe859b4-es6.js.map": "/m3-herb-recipe-calculator/static/js/996.abe859b4-es6.js.map",
-    "81.edca3528-es6.js.map": "/m3-herb-recipe-calculator/static/js/81.edca3528-es6.js.map",
-    "282.a1acd2b5.css.map": "/m3-herb-recipe-calculator/static/css/282.a1acd2b5.css.map",
-    "282.1a924e72-es6.js.map": "/m3-herb-recipe-calculator/static/js/282.1a924e72-es6.js.map"
+    "main.css": "./static/css/main.6dea0f05.chunk.css",
+    "main.js": "./static/js/main.60900223.chunk.js",
+    "main.js.map": "./static/js/main.60900223.chunk.js.map",
+    "runtime-main.js": "./static/js/runtime-main.f4709e5a.js",
+    "runtime-main.js.map": "./static/js/runtime-main.f4709e5a.js.map",
+    "static/css/2.585e768e.chunk.css": "./static/css/2.585e768e.chunk.css",
+    "static/js/2.2dfa5bf0.chunk.js": "./static/js/2.2dfa5bf0.chunk.js",
+    "static/js/2.2dfa5bf0.chunk.js.map": "./static/js/2.2dfa5bf0.chunk.js.map",
+    "static/js/3.3f217bbc.chunk.js": "./static/js/3.3f217bbc.chunk.js",
+    "static/js/3.3f217bbc.chunk.js.map": "./static/js/3.3f217bbc.chunk.js.map",
+    "index.html": "./index.html",
+    "static/css/2.585e768e.chunk.css.map": "./static/css/2.585e768e.chunk.css.map",
+    "static/css/main.6dea0f05.chunk.css.map": "./static/css/main.6dea0f05.chunk.css.map",
+    "static/js/2.2dfa5bf0.chunk.js.LICENSE.txt": "./static/js/2.2dfa5bf0.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
-    "static/js/runtime-main.18eaeec3-es6.js",
-    "static/js/main.d51de073-es6.js"
+    "static/js/runtime-main.f4709e5a.js",
+    "static/css/2.585e768e.chunk.css",
+    "static/js/2.2dfa5bf0.chunk.js",
+    "static/css/main.6dea0f05.chunk.css",
+    "static/js/main.60900223.chunk.js"
   ]
 }
