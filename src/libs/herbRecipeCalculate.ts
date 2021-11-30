@@ -197,7 +197,7 @@ export function herbRecipeMaxPositiveEffectCountSorter(a: ValidHerbRecipe, b: Va
   const getPotionPositiveEffectCount = (potion: Potion) =>
     Object.keys(potion.effects)
       .filter(effect =>
-        !herbEffectsSet[effect].tags.includes('负面效果')
+        herbEffectsSet[effect].tags.includes('正面效果')
       ).length;
   const bPositiveEffectCount = getPotionPositiveEffectCount(b[1])
   const aPositiveEffectCount = getPotionPositiveEffectCount(a[1])
