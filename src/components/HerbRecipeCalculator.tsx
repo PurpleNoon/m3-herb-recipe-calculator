@@ -1,13 +1,17 @@
 import { Select, Form, InputNumber, Button, Tag } from 'antd';
 import { useState, FC } from 'react';
-import herbEffects from '../libs/herbEffects';
 import {
   findHerbRecipe,
-  getHerbEffectTagSet,
   targetEffectTagSorter,
   avoidEffectTagSorter,
+  herbEffectTagSet,
+  potionEffectSorter,
+  getEffectType,
+  numberWithSymbol,
+  herbRecipeResultSorter,
 } from '../libs/herbRecipeCalculate';
 import type { ValidHerbRecipe } from '../libs/herbRecipeCalculate';
+import './HerbRecipeCalculator.css';
 
 const { Option, OptGroup } = Select;
 
@@ -29,19 +33,21 @@ interface HerbRecipeCalculatorProps {
   search?: (form: HerbSearchForm) => void;
 }
 
-const herbEffectTagSet = getHerbEffectTagSet(herbEffects);
-
 // 筛选配方 效果计算
+
+const effectTypeClassesMapping = {
+  正面效果: 'herb-card__effect--positive',
+  其他效果: 'herb-card__effect--other',
+  负面效果: 'herb-card__effect--negative',
+} as Partial<Record<string, string>>
 
 const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
   // const { search } = props;
   // TODO: 添加仅拥有药草菇选项
   // TODO: 添加一些预设，如法师、远程、近战等
   // TODO: 添加配方效果计算器
-  // TODO: 算法中排除药剂结果中只有负面效果的药水，或者提供一个 "好友模式" 的选项，整个小问号，进行对 "好友模式" 的说明
   // TODO: 美化界面
-  // TODO: 高级模式，功能（暂定）：自定义排序，"好友模式"等
-  // TODO: 更改目前的排序方式，正面效果多的排在前面，效果等级高的，目前没用
+  // TODO: 高级模式，功能（暂定）：自定义排序，"好友模式"（整个小问号，进行对 "好友模式" 的说明）等
   const [searchForm] = useState<HerbSearchForm>({
     targetEffects: ['药水等级提升1级'],
     avoidEffects: [],
@@ -61,18 +67,18 @@ const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
     // typeof search === 'function' && search(searchForm);
     const herbRecipes = findHerbRecipe(
       values.targetEffects,
-      values.topCount,
       values.avoidEffects,
     );
-    setHerbRecipeResult(herbRecipes);
+    const sortedHerbRecipes = herbRecipes.sort(herbRecipeResultSorter);
+    setHerbRecipeResult(sortedHerbRecipes.slice(0, values.topCount));
   };
   const targetHerbEffectsOptions = Object.keys(herbEffectTagSet)
     .sort(targetEffectTagSorter)
     .map(herbEffectTag => (
       <OptGroup key={herbEffectTag} label={herbEffectTag}>
         {herbEffectTagSet[herbEffectTag].map(
-          ([herbTag, { name, sampleDescription }]) => (
-            <Option key={name + herbTag} value={name}>
+          ({ name, sampleDescription }) => (
+            <Option key={name + herbEffectTag} value={name}>
               {`${name} ${sampleDescription ? `[${sampleDescription}]` : ''}`}
             </Option>
           ),
@@ -83,12 +89,13 @@ const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
     .sort(avoidEffectTagSorter)
     .map(herbEffectTag => (
       <OptGroup key={herbEffectTag} label={herbEffectTag}>
-        {herbEffectTagSet[herbEffectTag].map(
-          ([herbTag, { name, sampleDescription }]) => (
-            <Option key={name + herbTag} value={name}>
-              {`${name} ${sampleDescription ? `[${sampleDescription}]` : ''}`}
-            </Option>
-          ),
+        {herbEffectTagSet[herbEffectTag]
+          .map(
+            ({ name, sampleDescription }) => (
+              <Option key={name + herbEffectTag} value={name}>
+                {`${name} ${sampleDescription ? `[${sampleDescription}]` : ''}`}
+              </Option>
+            ),
         )}
       </OptGroup>
     ));
@@ -199,11 +206,15 @@ const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
                         <Tag key={herbName + String(index)}>{herbName}</Tag>
                       ))}
                   </div>
-                  <div>药水时间: {potion.time}</div>
+                  <div>药水变化时间: {numberWithSymbol(potion.time)}</div>
                   <div>效果</div>
-                  {Object.entries(potion.effects).map(([effect, lv]) => (
+                  {Object.entries(potion.effects)
+                    .sort((a, b) => potionEffectSorter(a[0], b[0]))
+                    .map(([effect, lv]) => (
                     <div key={effect} style={{ marginLeft: '2rem' }}>
-                      {effect}: {lv}
+                      <span className={effectTypeClassesMapping[getEffectType(effect)] || ''}>
+                        {effect
+                      }</span>: {lv}
                     </div>
                   ))}
                 </li>
