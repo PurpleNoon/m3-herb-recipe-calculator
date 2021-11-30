@@ -194,13 +194,13 @@ export function herbRecipeResultSorter(a: ValidHerbRecipe, b: ValidHerbRecipe) {
 // 正面效果数量相等时，则根据其他效果和负面效果的数量和来排序，数量少的排在前面
 // 其他效果和负面效果的数量和相等时，则按照药剂时间来排序，药剂时间长的排在前面
 export function herbRecipeMaxPositiveEffectCountSorter(a: ValidHerbRecipe, b: ValidHerbRecipe) {
-  const getPotionMaxPositiveEffectCount = (potion: Potion) =>
+  const getPotionPositiveEffectCount = (potion: Potion) =>
     Object.keys(potion.effects)
       .filter(effect =>
         !herbEffectsSet[effect].tags.includes('负面效果')
       ).length;
-  const bPositiveEffectCount = getPotionMaxPositiveEffectCount(b[1])
-  const aPositiveEffectCount = getPotionMaxPositiveEffectCount(a[1])
+  const bPositiveEffectCount = getPotionPositiveEffectCount(b[1])
+  const aPositiveEffectCount = getPotionPositiveEffectCount(a[1])
   const positiveEffectSortResult = bPositiveEffectCount - aPositiveEffectCount
   if (positiveEffectSortResult !== 0) {
     return positiveEffectSortResult
