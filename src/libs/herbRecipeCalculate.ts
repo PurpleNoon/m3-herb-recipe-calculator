@@ -99,7 +99,7 @@ export function calculateHerbRecipeEffects(herbRecipe: HerbInfo[]): Potion {
 // 0 => "0"，
 // -1 => "-1"，
 export function numberWithSymbol(num: number) {
-  if (num > 0) {
+  if (num >= 0) {
     return `+${num}`
   }
   return String(num)
