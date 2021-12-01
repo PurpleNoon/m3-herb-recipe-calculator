@@ -96,7 +96,7 @@ export function calculateHerbRecipeEffects(herbRecipe: HerbInfo[]): Potion {
 
 // 把数字转成带符号的，如：
 // 1 => "+1"，
-// 0 => "0"，
+// 0 => "+0"，
 // -1 => "-1"，
 export function numberWithSymbol(num: number) {
   if (num >= 0) {
