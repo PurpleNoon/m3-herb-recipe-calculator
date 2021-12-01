@@ -9,11 +9,13 @@ specifiers:
   '@types/lodash': ^4.14.177
   '@types/node': ^16.11.10
   '@types/react': ^17.0.37
+  '@types/react-copy-to-clipboard': ^5.0.2
   '@types/react-dom': ^17.0.11
   antd: ^4.17.2
   lodash: ^4.17.21
   mitt: ^3.0.0
   react: ^17.0.2
+  react-copy-to-clipboard: ^5.0.4
   react-dom: ^17.0.2
   react-scripts: 4.0.3
   typescript: ^4.5.2
@@ -28,11 +30,13 @@ dependencies:
   '@types/lodash': registry.npmmirror.com/@types/lodash/4.14.177
   '@types/node': registry.npmmirror.com/@types/node/16.11.10
   '@types/react': registry.npmmirror.com/@types/react/17.0.37
+  '@types/react-copy-to-clipboard': registry.npmmirror.com/@types/react-copy-to-clipboard/5.0.2
   '@types/react-dom': registry.npmmirror.com/@types/react-dom/17.0.11
   antd: registry.npmmirror.com/antd/4.17.2_react-dom@17.0.2+react@17.0.2
   lodash: registry.nlark.com/lodash/4.17.21
   mitt: registry.nlark.com/mitt/3.0.0
   react: registry.npmmirror.com/react/17.0.2
+  react-copy-to-clipboard: registry.npmmirror.com/react-copy-to-clipboard/5.0.4_react@17.0.2
   react-dom: registry.npmmirror.com/react-dom/17.0.2_react@17.0.2
   react-scripts: registry.npmmirror.com/react-scripts/4.0.3_react@17.0.2+typescript@4.5.2
   typescript: registry.npmmirror.com/typescript/4.5.2
@@ -10824,6 +10828,14 @@ packages:
     version: 1.5.5
     dev: false
 
+  registry.npmmirror.com/@types/react-copy-to-clipboard/5.0.2:
+    resolution: {integrity: sha1-wpaQtHKlTt/zWRbw0cbHl60P00s=, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@types/react-copy-to-clipboard/download/@types/react-copy-to-clipboard-5.0.2.tgz}
+    name: '@types/react-copy-to-clipboard'
+    version: 5.0.2
+    dependencies:
+      '@types/react': registry.npmmirror.com/@types/react/17.0.37
+    dev: false
+
   registry.npmmirror.com/@types/react-dom/17.0.11:
     resolution: {integrity: sha1-4ercPF6GvbX3aE4AJ0riKOe8xGY=, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@types/react-dom/download/@types/react-dom-17.0.11.tgz}
     name: '@types/react-dom'
@@ -14659,6 +14671,19 @@ packages:
       raf: registry.nlark.com/raf/3.4.1
       regenerator-runtime: registry.nlark.com/regenerator-runtime/0.13.9
       whatwg-fetch: registry.nlark.com/whatwg-fetch/3.6.2
+    dev: false
+
+  registry.npmmirror.com/react-copy-to-clipboard/5.0.4_react@17.0.2:
+    resolution: {integrity: sha1-QuxRmwPrlBOxGK+S0XgMQDpfGb8=, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/react-copy-to-clipboard/download/react-copy-to-clipboard-5.0.4.tgz}
+    id: registry.npmmirror.com/react-copy-to-clipboard/5.0.4
+    name: react-copy-to-clipboard
+    version: 5.0.4
+    peerDependencies:
+      react: ^15.3.0 || ^16.0.0 || ^17.0.0
+    dependencies:
+      copy-to-clipboard: registry.nlark.com/copy-to-clipboard/3.3.1
+      prop-types: registry.nlark.com/prop-types/15.7.2
+      react: registry.npmmirror.com/react/17.0.2
     dev: false
 
   registry.npmmirror.com/react-dev-utils/11.0.4:

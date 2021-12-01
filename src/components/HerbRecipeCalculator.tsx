@@ -1,4 +1,4 @@
-import { Select, Form, InputNumber, Button, Tag } from 'antd';
+import { Select, Form, InputNumber, Button, Tag, message } from 'antd';
 import { useState, FC } from 'react';
 import {
   findHerbRecipe,
@@ -11,6 +11,7 @@ import {
   herbRecipeResultSorter,
 } from '../libs/herbRecipeCalculate';
 import type { ValidHerbRecipe } from '../libs/herbRecipeCalculate';
+import { CopyToClipboard } from 'react-copy-to-clipboard';
 import './HerbRecipeCalculator.css';
 
 const { Option, OptGroup } = Select;
@@ -51,7 +52,7 @@ const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
   const [searchForm] = useState<HerbSearchForm>({
     targetEffects: ['药水等级提升1级'],
     avoidEffects: [],
-    topCount: 999,
+    topCount: 99,
   });
   const [form] = Form.useForm();
   const [herbRecipeResult, setHerbRecipeResult] = useState<ValidHerbRecipe[]>(
@@ -99,6 +100,7 @@ const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
         )}
       </OptGroup>
     ));
+  const handleHerbNameCopied = () => message.success('药草名称复制完成');
   return (
     <div>
       <div
@@ -190,24 +192,37 @@ const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
             </Form.Item>
           </Form>
         </div>
+        <hr />
         <div>
-          配方列表:
+          <h3>配方列表:</h3>
           <ul style={{ listStyleType: 'decimal' }}>
             {/* TODO: 做成卡片样式 */}
             {herbRecipeResult.map(herbRecipeInfo => {
               const [recipe, potion] = herbRecipeInfo;
+              const recipeContent = (
+                <div>
+                  {/* 药草列表： */}
+                  {recipe
+                    .map(herb => herb.name)
+                    .map((herbName, index) => (
+                      <CopyToClipboard
+                        key={herbName + String(index)}
+                        text={herbName}
+                        onCopy={handleHerbNameCopied}>
+                        <Tag style={{
+                          cursor: 'pointer'
+                        }}>{herbName}</Tag>
+                      </CopyToClipboard>
+                    ))}
+                </div>
+              )
               return (
-                <li key={recipe.map(herb => herb.name).join(',')}>
-                  <div>
-                    {recipe
-                      .map(herb => herb.name)
-                      .map((herbName, index) => (
-                        // TODO: 添加点击复制效果
-                        <Tag key={herbName + String(index)}>{herbName}</Tag>
-                      ))}
-                  </div>
+                <li style={{
+                  marginBottom: 4
+                }} key={recipe.map(herb => herb.name).join(',')}>
+                  {recipeContent}
                   <div>药水变化时间: {numberWithSymbol(potion.time)}</div>
-                  <div>效果</div>
+                  <div>效果：</div>
                   {Object.entries(potion.effects)
                     .sort((a, b) => potionEffectSorter(a[0], b[0]))
                     .map(([effect, lv]) => (
