@@ -53,13 +53,12 @@ const potionAllTimeRange = uniq(
   ),
 );
 
-// TODO: 这里需要修改，现在改成药剂变化时间而不是药剂持续时间了
 const isSameHerbTime = (timeA: number, timeB: number) =>
   potionAllTimeRange.includes(timeA) &&
   potionAllTimeRange.includes(timeB) &&
   timeA >= timeB - 7 &&
   timeA <= timeB + 8;
 
-export function isSamePotion(a: Potion, b: Potion) {
-  return isSameHerbTime(a.time, b.time) && isEqual(a.effects, b.effects);
+export function isSamePotion(actualPotion: Potion, calculatedPotion: Potion) {
+  return isSameHerbTime(actualPotion.time, calculatedPotion.time + 12) && isEqual(actualPotion.effects, calculatedPotion.effects);
 }

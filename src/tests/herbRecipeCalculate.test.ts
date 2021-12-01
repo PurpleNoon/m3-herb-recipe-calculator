@@ -13,7 +13,7 @@ describe('test herb recipe calculate', () => {
     checkTestSet(herbRecipeTestSet);
     let skipCount = 0;
     herbRecipeTestSet.forEach((testCase, index) => {
-      const [recipe, potion] = testCase;
+      const [recipe, actualPotion] = testCase;
       // 随机效果的校验，以后再说吧
       if (
         recipe.some(herbName =>
@@ -30,15 +30,15 @@ describe('test herb recipe calculate', () => {
         return;
       }
       const fullRecipe = recipe.map(herbName => herbMap[herbName]);
-      const actualPotion = calculateHerbRecipeEffects(fullRecipe);
-      const samePotion = isSamePotion(potion, actualPotion);
+      const calculatedPotion = calculateHerbRecipeEffects(fullRecipe);
+      const samePotion = isSamePotion(actualPotion, calculatedPotion);
       if (!samePotion) {
         // eslint-disable-next-line no-console
         console.log(`Recipe: ${JSON.stringify(fullRecipe, null, 2)}`);
         // eslint-disable-next-line no-console
-        console.log(`Actual potion: ${JSON.stringify(actualPotion)}`);
+        console.log(`Actual potion: ${JSON.stringify(calculatedPotion)}`);
         // eslint-disable-next-line no-console
-        console.log(`Expect potion: ${JSON.stringify(potion)}`);
+        console.log(`Expect potion: ${JSON.stringify(actualPotion)}`);
       }
       expect(samePotion).toBe(true);
       // eslint-disable-next-line no-console
