@@ -59,6 +59,6 @@ const isSameHerbTime = (timeA: number, timeB: number) =>
   timeA >= timeB - 7 &&
   timeA <= timeB + 8;
 
-export function isSamePotion(a: Potion, b: Potion) {
-  return isSameHerbTime(a.time, b.time) && isEqual(a.effects, b.effects);
+export function isSamePotion(actualPotion: Potion, calculatedPotion: Potion) {
+  return isSameHerbTime(actualPotion.time, calculatedPotion.time + 12) && isEqual(actualPotion.effects, calculatedPotion.effects);
 }

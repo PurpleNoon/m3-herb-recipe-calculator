@@ -1,11 +1,11 @@
-import { intersection, countBy, flatten, groupBy } from 'lodash';
+import { intersection, countBy, flatten, groupBy, keyBy } from 'lodash';
 import { combinationsWithReplacement } from '@shlappas/itertools';
 import type { HerbEffect } from '../libs/herbEffects';
-// import herbEffects from '@/libs/herbEffects';
+import herbEffects from '../libs/herbEffects';
 import herbs from '../libs/herbs';
 import type { HerbInfo } from '../libs/herbs';
 
-// const herbEffectsSet = keyBy(herbEffects, 'name');
+const herbEffectsSet = keyBy(herbEffects, 'name');
 // const herbSet = keyBy(herbs, 'name');
 export interface Potion {
   time: number;
@@ -74,8 +74,7 @@ export function calculateHerbRecipeEffects(herbRecipe: HerbInfo[]): Potion {
   const normalEffectMapWithLv = getNormalEffectMapWithLv(herbRecipe);
 
   const improveTime = specialEffectMapWithLv['药水时间'] || 0;
-  // TODO: 把这个时间换成偏移量
-  const potionTime = 12 + improveTime;
+  const potionTime = improveTime;
   const improveLv = specialEffectMapWithLv['药水等级'] || 0;
   const finalEffectMapWithLv = Object.keys(normalEffectMapWithLv).reduce(
     (total, normalEffect) => {
@@ -95,37 +94,78 @@ export function calculateHerbRecipeEffects(herbRecipe: HerbInfo[]): Potion {
   };
 }
 
+// 把数字转成带符号的，如：
+// 1 => "+1"，
+// 0 => "+0"，
+// -1 => "-1"，
+export function numberWithSymbol(num: number) {
+  if (num >= 0) {
+    return `+${num}`
+  }
+  return String(num)
+}
+
 export type ValidHerbRecipe = [HerbInfo[], Potion];
 
 const herbSlotCount = 5;
 
-export function findHerbRecipe(
-  targetEffects: string[] = [],
-  top = 10,
-  avoidEffects: string[] = [],
-  notice: (message: string) => void = () => undefined,
-) {
+export interface CalculateHerbRecipeEventData {
+  name: string
+  data?: {
+    count: number;
+    total: number;
+  }
+}
+
+interface FindHerbRecipeParams {
+  targetEffects: string[]
+  avoidEffects: string[]
+  notice: (message: string, data?: CalculateHerbRecipeEventData['data']) => void
+}
+
+export function findHerbRecipe({
+  targetEffects = [],
+  avoidEffects = [],
+  notice = () => undefined,
+}: FindHerbRecipeParams) {
   const aimHerbs = herbs.filter(
     herb =>
       herb.effects.includes('药水等级提升1级') ||
       Boolean(intersection(targetEffects, herb.effects).length),
   );
-  notice('startFindHerbRecipes');
-  const herbRecipes = [...combinationsWithReplacement(aimHerbs, herbSlotCount)];
-  notice('calculatePotionsEffect');
+  const totalHerbRecipesCount = combinationsWithReplacementCount(aimHerbs.length, herbSlotCount)
+  const herbRecipes = [];
+  const herbRecipesGenerator = combinationsWithReplacement(aimHerbs, herbSlotCount);
+  let iterResult = herbRecipesGenerator.next();
+  let iteratedCount = 1;
+  while (!iterResult.done) {
+    herbRecipes.push(iterResult.value);
+    notice('findedHerbRecipeCount', {
+      count: iteratedCount,
+      total: totalHerbRecipesCount
+    })
+    iteratedCount++;
+    iterResult = herbRecipesGenerator.next();
+  }
   const herbRecipeResults = herbRecipes.map(
-    herbRecipe =>
-      [herbRecipe, calculateHerbRecipeEffects(herbRecipe)] as ValidHerbRecipe,
+    (herbRecipe, herbRecipeIndex) => {
+      const validHerbRecipe = [herbRecipe, calculateHerbRecipeEffects(herbRecipe)] as ValidHerbRecipe;
+      notice('calculatePotionsEffectCount', {
+        count: herbRecipeIndex + 1,
+        total: totalHerbRecipesCount
+      })
+      return validHerbRecipe;
+    },
   );
-  const validHerbRecipes = herbRecipeResults.filter(([_, potion]) =>
-    Object.keys(potion.effects).every(
-      potionEffect => !avoidEffects.includes(potionEffect),
-    ),
-  );
-  notice('sortValidHerbRecipes');
-  const sortedValidHerbRecipes = validHerbRecipes.sort(herbRecipeResultSorter);
-  notice('finishFindHerbRecipes');
-  return sortedValidHerbRecipes.slice(0, top);
+  notice('filteringEffectiveRecipes');
+  const validHerbRecipes = herbRecipeResults
+    .filter(([_, potion]) =>
+      Object.keys(potion.effects).every(
+        potionEffect => !avoidEffects.includes(potionEffect),
+      ),
+    )
+    .filter(herbRecipesWithoutAllNegativeEffectFilter);
+  return validHerbRecipes;
 }
 
 export function getHerbEffectTagSet(allHerbEffects: HerbEffect[]) {
@@ -138,14 +178,22 @@ export function getHerbEffectTagSet(allHerbEffects: HerbEffect[]) {
         .map(herbTag => [herbTag, herbEffect] as [string, HerbEffect]),
     ),
   );
-  const herbEffectTagSet = groupBy(
+  const herbEffectTagWrapperSet = groupBy(
     herbEffectWithTags,
     herbEffectWithTag => herbEffectWithTag[0],
   );
+  const herbEffectTagSet = Object.keys(herbEffectTagWrapperSet)
+    .reduce((total, herbEffectTag) => {
+      total[herbEffectTag] = herbEffectTagWrapperSet[herbEffectTag]
+        .map(herbEffectTagWrapper => herbEffectTagWrapper[1]);
+      return total;
+    }, {} as Record<string, HerbEffect[]>);
   return herbEffectTagSet;
 }
 
-const targetEffectTagSortOrderMap = {
+export const herbEffectTagSet = getHerbEffectTagSet(herbEffects);
+
+export const targetEffectTagSortOrderMap = {
   正面效果: 1,
   其他效果: 2,
   负面效果: 3,
@@ -158,7 +206,7 @@ export function targetEffectTagSorter(a: string, b: string) {
   );
 }
 
-const avoidEffectTagSortOrderMap = {
+export const avoidEffectTagSortOrderMap = {
   负面效果: 1,
   其他效果: 2,
   正面效果: 3,
@@ -171,6 +219,35 @@ export function avoidEffectTagSorter(a: string, b: string) {
 }
 
 export function herbRecipeResultSorter(a: ValidHerbRecipe, b: ValidHerbRecipe) {
+  return herbRecipeMaxPositiveEffectCountSorter(a, b);
+}
+
+// 根据正面效果的数量来排序，正面效果数量多的排在前面
+// 正面效果数量相等时，则根据其他效果和负面效果的数量和来排序，数量少的排在前面
+// 其他效果和负面效果的数量和相等时，则按照药剂时间来排序，药剂时间长的排在前面
+export function herbRecipeMaxPositiveEffectCountSorter(a: ValidHerbRecipe, b: ValidHerbRecipe) {
+  const getPotionPositiveEffectCount = (potion: Potion) =>
+    Object.keys(potion.effects)
+      .filter(effect =>
+        herbEffectsSet[effect].tags.includes('正面效果')
+      ).length;
+  const bPositiveEffectCount = getPotionPositiveEffectCount(b[1])
+  const aPositiveEffectCount = getPotionPositiveEffectCount(a[1])
+  const positiveEffectSortResult = bPositiveEffectCount - aPositiveEffectCount
+  if (positiveEffectSortResult !== 0) {
+    return positiveEffectSortResult
+  }
+  const bOtherEffectCount = Object.keys(b[1].effects).length - bPositiveEffectCount
+  const aOtherEffectCount = Object.keys(a[1].effects).length - aPositiveEffectCount
+  const otherEffectSortResult = aOtherEffectCount - bOtherEffectCount
+  if (otherEffectSortResult !== 0) {
+    return otherEffectSortResult
+  }
+  return b[1].time - a[1].time
+}
+
+// 排序配方列表，效果等级高的排在前面
+export function herbRecipeMaxEffectLvSorter(a: ValidHerbRecipe, b: ValidHerbRecipe) {
   const getPotionMaxEffectLv = (potion: Potion) =>
     Math.max(...Object.values(potion.effects));
   const sum = (...numbers: number[]) =>
@@ -183,4 +260,45 @@ export function herbRecipeResultSorter(a: ValidHerbRecipe, b: ValidHerbRecipe) {
     return potionMaxEffectDiff;
   }
   return getPotionAllEffectLv(b[1]) - getPotionAllEffectLv(a[1]);
+}
+
+// 对配方列表进行处理，剔除全是负面效果的药剂，同时剔除效果列表为空的药剂
+export function herbRecipesWithoutAllNegativeEffectFilter(validHerbRecipes: ValidHerbRecipe) {
+  const [, potion] = validHerbRecipes;
+  const potionEffectList = Object.keys(potion.effects)
+  if (potionEffectList.length === 0) {
+    return false
+  }
+  const isAllNegativeEffect = potionEffectList.every(effect => getEffectType(effect) === '负面效果')
+  return !isAllNegativeEffect
+}
+
+// 获取效果属于哪种类型
+export function getEffectType(effect: string) {
+  const { tags } = herbEffectsSet[effect];
+  return ['正面效果', '其他效果', '负面效果']
+    .find(effectTag => tags.includes(effectTag)) || '';
+}
+
+// 对药剂效果列表进行排序，正面效果排在最前面，其他效果排在正面效果之后，负面效果排在最后
+export function potionEffectSorter(effectA: string, effectB: string) {
+  return targetEffectTagSorter(getEffectType(effectA), getEffectType(effectB));
+}
+
+
+// 计算阶乘
+export function factorial(n: number) {
+  let result = n;
+  for (let i = n - 1; i > 1; i--) {
+    result *= i;
+  }
+  return result;
+}
+
+// 计算 combinationsWithReplacement 返回的元素总数
+export function combinationsWithReplacementCount(n: number, r: number) {
+  // return (n+r-1)! / r! / (n-1)! when n > 0
+  // 计算公式来自于 python itertools 文档
+  // https://docs.python.org/zh-cn/3/library/itertools.html
+  return factorial(n + r - 1) / factorial(r) / factorial(n - 1)
 }

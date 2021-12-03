@@ -1,13 +1,20 @@
-import { Select, Form, InputNumber, Button, Tag } from 'antd';
+import { Select, Form, InputNumber, Button, Tag, message } from 'antd';
 import { useState, FC } from 'react';
-import herbEffects from '../libs/herbEffects';
 import {
-  findHerbRecipe,
-  getHerbEffectTagSet,
   targetEffectTagSorter,
   avoidEffectTagSorter,
+  herbEffectTagSet,
+  potionEffectSorter,
+  getEffectType,
+  numberWithSymbol,
 } from '../libs/herbRecipeCalculate';
 import type { ValidHerbRecipe } from '../libs/herbRecipeCalculate';
+import { CopyToClipboard } from 'react-copy-to-clipboard';
+import './HerbRecipeCalculator.css';
+import pkg from '../../package.json'
+
+// 这里的 .ts 必须加
+import Worker from '../workers/findHerbRecipes.worker.ts';
 
 const { Option, OptGroup } = Select;
 
@@ -19,7 +26,7 @@ const tailLayout = {
   wrapperCol: { offset: 6, span: 18 },
 };
 
-interface HerbSearchForm {
+export interface HerbSearchForm {
   targetEffects: string[];
   avoidEffects: string[];
   topCount: number;
@@ -29,47 +36,70 @@ interface HerbRecipeCalculatorProps {
   search?: (form: HerbSearchForm) => void;
 }
 
-const herbEffectTagSet = getHerbEffectTagSet(herbEffects);
-
 // 筛选配方 效果计算
+
+const effectTypeClassesMapping = {
+  正面效果: 'herb-card__effect--positive',
+  其他效果: 'herb-card__effect--other',
+  负面效果: 'herb-card__effect--negative',
+} as Partial<Record<string, string>>
+
+// 使用 web workers 进行计算药剂配方，避免阻塞主线程
+const calcHerbRecipesWithWorker = (params: HerbSearchForm): Promise<ValidHerbRecipe[]> => {
+  return new Promise((resolve) => {
+    const worker = new Worker();
+    worker.onmessage = function (event) {
+      const action = event.data;
+      const handlerMap = {
+        finishCalculateHerbRecipes(event) {
+          worker.terminate();
+          const { data } = event.data;
+          resolve(data.list);
+        }
+      } as Record<string, (event: MessageEvent<any>) => void>;
+      handlerMap[action.name] && handlerMap[action.name](event);
+    };
+    worker.postMessage({
+      name: 'findRecipes',
+      data: params
+    });
+  })
+}
 
 const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
   // const { search } = props;
   // TODO: 添加仅拥有药草菇选项
   // TODO: 添加一些预设，如法师、远程、近战等
   // TODO: 添加配方效果计算器
-  // TODO: 算法中排除药剂结果中只有负面效果的药水，或者提供一个 "好友模式" 的选项，整个小问号，进行对 "好友模式" 的说明
   // TODO: 美化界面
-  // TODO: 高级模式，功能（暂定）：自定义排序，"好友模式"等
+  // TODO: 高级模式，功能（暂定）：自定义排序，"好友模式"（整个小问号，进行对 "好友模式" 的说明）等
   const [searchForm] = useState<HerbSearchForm>({
-    targetEffects: ['药水等级提升1级'],
+    targetEffects: ['药水等级提升1级', '药水时间提升8分'],
     avoidEffects: [],
-    topCount: 999,
+    topCount: 99,
   });
   const [form] = Form.useForm();
   const [herbRecipeResult, setHerbRecipeResult] = useState<ValidHerbRecipe[]>(
     [],
   );
-  const onFinish = (values: typeof searchForm) => {
+  const [loading, setLoading] = useState(false)
+  const onFinish = async (values: typeof searchForm) => {
     // eslint-disable-next-line no-console
-    console.log(values);
-    // TODO: 提供进度条显示
+    // TODO: 添加查询到的配方总数
     // TODO: 拆分 form 和 list 组件
-    // typeof search === 'function' && search(searchForm);
-    const herbRecipes = findHerbRecipe(
-      values.targetEffects,
-      values.topCount,
-      values.avoidEffects,
-    );
-    setHerbRecipeResult(herbRecipes);
+    setLoading(true);
+    // 使用 web workers 进行计算药剂配方，避免阻塞主线程
+    const herbRecipes = await calcHerbRecipesWithWorker(values);
+    setHerbRecipeResult(herbRecipes)
+    setLoading(false);
   };
   const targetHerbEffectsOptions = Object.keys(herbEffectTagSet)
     .sort(targetEffectTagSorter)
     .map(herbEffectTag => (
       <OptGroup key={herbEffectTag} label={herbEffectTag}>
         {herbEffectTagSet[herbEffectTag].map(
-          ([herbTag, { name, sampleDescription }]) => (
-            <Option key={name + herbTag} value={name}>
+          ({ name, sampleDescription }) => (
+            <Option key={name + herbEffectTag} value={name}>
               {`${name} ${sampleDescription ? `[${sampleDescription}]` : ''}`}
             </Option>
           ),
@@ -80,15 +110,17 @@ const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
     .sort(avoidEffectTagSorter)
     .map(herbEffectTag => (
       <OptGroup key={herbEffectTag} label={herbEffectTag}>
-        {herbEffectTagSet[herbEffectTag].map(
-          ([herbTag, { name, sampleDescription }]) => (
-            <Option key={name + herbTag} value={name}>
-              {`${name} ${sampleDescription ? `[${sampleDescription}]` : ''}`}
-            </Option>
-          ),
+        {herbEffectTagSet[herbEffectTag]
+          .map(
+            ({ name, sampleDescription }) => (
+              <Option key={name + herbEffectTag} value={name}>
+                {`${name} ${sampleDescription ? `[${sampleDescription}]` : ''}`}
+              </Option>
+            ),
         )}
       </OptGroup>
     ));
+  const handleHerbNameCopied = () => message.success('药草名称复制完成');
   return (
     <div>
       <div
@@ -106,19 +138,28 @@ const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
             <h2
               style={{
                 textAlign: 'center',
+                marginBottom: 0
               }}>
               药草计算器
             </h2>
             <div>
+              <div style={{
+                float: 'right',
+                fontSize: 12,
+                color: 'gray'
+              }}>
+                Version {pkg.version}
+              </div>
+              <div style={{ clear: 'both' }}></div>
+            </div>
+            <div>
               <hr />
-              作者：泪随樱花落
-              <br />
-              QQ：346014945
+              作者：泪随樱花落<span style={{ marginLeft: '1rem' }}></span>QQ：346014945
               <br />
               目前还在不断完善中（佛系更新ing），如果有什么好的建议或者发现了
               bug，欢迎联系作者_(:з」∠)_
               <br />
-              PS: 查找配方时会卡顿，因为配方数量比较大（取决于选择的期望的效果和排除的效果），稍等一会即可
+              PS: 查找配方可能会慢一点，因为配方数量比较大（取决于选择的期望的效果和排除的效果），稍等一会即可
               <hr />
             </div>
             <Form.Item
@@ -174,33 +215,50 @@ const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
               <InputNumber min={1} keyboard={true} />
             </Form.Item>
             <Form.Item {...tailLayout}>
-              <Button type="primary" htmlType="submit">
+              <Button type="primary" htmlType="submit" loading={loading}>
                 查找配方
               </Button>
             </Form.Item>
           </Form>
         </div>
+        <hr />
         <div>
-          配方列表:
+          <h3>药水配方列表:</h3>
           <ul style={{ listStyleType: 'decimal' }}>
             {/* TODO: 做成卡片样式 */}
             {herbRecipeResult.map(herbRecipeInfo => {
               const [recipe, potion] = herbRecipeInfo;
+              const recipeContent = (
+                <div>
+                  {/* 药草列表： */}
+                  {recipe
+                    .map(herb => herb.name)
+                    .map((herbName, index) => (
+                      <CopyToClipboard
+                        key={herbName + String(index)}
+                        text={herbName}
+                        onCopy={handleHerbNameCopied}>
+                        <Tag style={{
+                          cursor: 'pointer'
+                        }}>{herbName}</Tag>
+                      </CopyToClipboard>
+                    ))}
+                </div>
+              )
               return (
-                <li key={recipe.map(herb => herb.name).join(',')}>
-                  <div>
-                    {recipe
-                      .map(herb => herb.name)
-                      .map((herbName, index) => (
-                        // TODO: 添加点击复制效果
-                        <Tag key={herbName + String(index)}>{herbName}</Tag>
-                      ))}
-                  </div>
-                  <div>药水时间: {potion.time}</div>
-                  <div>效果</div>
-                  {Object.entries(potion.effects).map(([effect, lv]) => (
+                <li style={{
+                  marginBottom: 4
+                }} key={recipe.map(herb => herb.name).join(',')}>
+                  {recipeContent}
+                  <div>药水变化时间: {numberWithSymbol(potion.time)}</div>
+                  <div>效果：</div>
+                  {Object.entries(potion.effects)
+                    .sort((a, b) => potionEffectSorter(a[0], b[0]))
+                    .map(([effect, lv]) => (
                     <div key={effect} style={{ marginLeft: '2rem' }}>
-                      {effect}: {lv}
+                      <span className={effectTypeClassesMapping[getEffectType(effect)] || ''}>
+                        {effect
+                      }</span>: {lv}
                     </div>
                   ))}
                 </li>
