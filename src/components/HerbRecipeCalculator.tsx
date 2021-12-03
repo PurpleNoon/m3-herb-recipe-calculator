@@ -160,6 +160,8 @@ const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
               bug，欢迎联系作者_(:з」∠)_
               <br />
               PS: 查找配方可能会慢一点，因为配方数量比较大（取决于选择的期望的效果和排除的效果），稍等一会即可
+              <br />
+              更新日志：<a target="_blank" href="https://github.com/PurpleNoon/m3-herb-recipe-calculator/blob/main/docs/%E6%9B%B4%E6%96%B0%E6%97%A5%E5%BF%97.md" rel="noreferrer">链接地址</a>
               <hr />
             </div>
             <Form.Item
