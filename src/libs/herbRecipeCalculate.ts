@@ -109,30 +109,62 @@ export type ValidHerbRecipe = [HerbInfo[], Potion];
 
 const herbSlotCount = 5;
 
-export function findHerbRecipe(
-  targetEffects: string[] = [],
-  avoidEffects: string[] = [],
-  notice: (message: string) => void = () => undefined,
-) {
-  notice('startFindAimHerbs');
+export interface CalculateHerbRecipeEventData {
+  name: string
+  data?: {
+    count: number;
+    total: number;
+  }
+}
+
+interface FindHerbRecipeParams {
+  targetEffects: string[]
+  avoidEffects: string[]
+  notice: (message: string, data?: CalculateHerbRecipeEventData['data']) => void
+}
+
+export function findHerbRecipe({
+  targetEffects = [],
+  avoidEffects = [],
+  notice = () => undefined,
+}: FindHerbRecipeParams) {
   const aimHerbs = herbs.filter(
     herb =>
       herb.effects.includes('药水等级提升1级') ||
       Boolean(intersection(targetEffects, herb.effects).length),
   );
-  notice('startFindHerbRecipes');
-  const herbRecipes = [...combinationsWithReplacement(aimHerbs, herbSlotCount)];
-  notice('calculatePotionsEffect');
+  const totalHerbRecipesCount = combinationsWithReplacementCount(aimHerbs.length, herbSlotCount)
+  const herbRecipes = [];
+  const herbRecipesGenerator = combinationsWithReplacement(aimHerbs, herbSlotCount);
+  let iterResult = herbRecipesGenerator.next();
+  let iteratedCount = 1;
+  while (!iterResult.done) {
+    herbRecipes.push(iterResult.value);
+    notice('findedHerbRecipeCount', {
+      count: iteratedCount,
+      total: totalHerbRecipesCount
+    })
+    iteratedCount++;
+    iterResult = herbRecipesGenerator.next();
+  }
   const herbRecipeResults = herbRecipes.map(
-    herbRecipe =>
-      [herbRecipe, calculateHerbRecipeEffects(herbRecipe)] as ValidHerbRecipe,
+    (herbRecipe, herbRecipeIndex) => {
+      const validHerbRecipe = [herbRecipe, calculateHerbRecipeEffects(herbRecipe)] as ValidHerbRecipe;
+      notice('calculatePotionsEffectCount', {
+        count: herbRecipeIndex + 1,
+        total: totalHerbRecipesCount
+      })
+      return validHerbRecipe;
+    },
   );
-  const validHerbRecipes = herbRecipeResults.filter(([_, potion]) =>
-    Object.keys(potion.effects).every(
-      potionEffect => !avoidEffects.includes(potionEffect),
-    ),
-  ).filter(herbRecipesWithoutAllNegativeEffectFilter);
-  notice('finishFindHerbRecipes');
+  notice('filteringEffectiveRecipes');
+  const validHerbRecipes = herbRecipeResults
+    .filter(([_, potion]) =>
+      Object.keys(potion.effects).every(
+        potionEffect => !avoidEffects.includes(potionEffect),
+      ),
+    )
+    .filter(herbRecipesWithoutAllNegativeEffectFilter);
   return validHerbRecipes;
 }
 
@@ -251,4 +283,22 @@ export function getEffectType(effect: string) {
 // 对药剂效果列表进行排序，正面效果排在最前面，其他效果排在正面效果之后，负面效果排在最后
 export function potionEffectSorter(effectA: string, effectB: string) {
   return targetEffectTagSorter(getEffectType(effectA), getEffectType(effectB));
+}
+
+
+// 计算阶乘
+export function factorial(n: number) {
+  let result = n;
+  for (let i = n - 1; i > 1; i--) {
+    result *= i;
+  }
+  return result;
+}
+
+// 计算 combinationsWithReplacement 返回的元素总数
+export function combinationsWithReplacementCount(n: number, r: number) {
+  // return (n+r-1)! / r! / (n-1)! when n > 0
+  // 计算公式来自于 python itertools 文档
+  // https://docs.python.org/zh-cn/3/library/itertools.html
+  return factorial(n + r - 1) / factorial(r) / factorial(n - 1)
 }

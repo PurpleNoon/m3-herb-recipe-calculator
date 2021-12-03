@@ -275,22 +275,4 @@ export interface HerbInfo {
   effects: string[];
 }
 
-// class Herb {
-//   name: string = '';
-
-//   color: string = '';
-
-//   effects: string[] = [];
-
-//   constructor({ name, color, effects }: HerbInfo) {
-//     this.name = name;
-//     this.color = color;
-//     this.effects = effects;
-//   }
-
-//   get special() {
-//     return this.effects[this.effects.length - 1];
-//   }
-// }
-
 export default herbs;

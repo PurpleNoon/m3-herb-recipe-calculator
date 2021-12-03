@@ -1,18 +1,20 @@
 import { Select, Form, InputNumber, Button, Tag, message } from 'antd';
 import { useState, FC } from 'react';
 import {
-  findHerbRecipe,
   targetEffectTagSorter,
   avoidEffectTagSorter,
   herbEffectTagSet,
   potionEffectSorter,
   getEffectType,
   numberWithSymbol,
-  herbRecipeResultSorter,
 } from '../libs/herbRecipeCalculate';
 import type { ValidHerbRecipe } from '../libs/herbRecipeCalculate';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import './HerbRecipeCalculator.css';
+import pkg from '../../package.json'
+
+// 这里的 .ts 必须加
+import Worker from '../workers/findHerbRecipes.worker.ts';
 
 const { Option, OptGroup } = Select;
 
@@ -24,7 +26,7 @@ const tailLayout = {
   wrapperCol: { offset: 6, span: 18 },
 };
 
-interface HerbSearchForm {
+export interface HerbSearchForm {
   targetEffects: string[];
   avoidEffects: string[];
   topCount: number;
@@ -42,6 +44,28 @@ const effectTypeClassesMapping = {
   负面效果: 'herb-card__effect--negative',
 } as Partial<Record<string, string>>
 
+// 使用 web workers 进行计算药剂配方，避免阻塞主线程
+const calcHerbRecipesWithWorker = (params: HerbSearchForm): Promise<ValidHerbRecipe[]> => {
+  return new Promise((resolve) => {
+    const worker = new Worker();
+    worker.onmessage = function (event) {
+      const action = event.data;
+      const handlerMap = {
+        finishCalculateHerbRecipes(event) {
+          worker.terminate();
+          const { data } = event.data;
+          resolve(data.list);
+        }
+      } as Record<string, (event: MessageEvent<any>) => void>;
+      handlerMap[action.name] && handlerMap[action.name](event);
+    };
+    worker.postMessage({
+      name: 'findRecipes',
+      data: params
+    });
+  })
+}
+
 const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
   // const { search } = props;
   // TODO: 添加仅拥有药草菇选项
@@ -50,7 +74,7 @@ const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
   // TODO: 美化界面
   // TODO: 高级模式，功能（暂定）：自定义排序，"好友模式"（整个小问号，进行对 "好友模式" 的说明）等
   const [searchForm] = useState<HerbSearchForm>({
-    targetEffects: ['药水等级提升1级'],
+    targetEffects: ['药水等级提升1级', '药水时间提升8分'],
     avoidEffects: [],
     topCount: 99,
   });
@@ -58,20 +82,16 @@ const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
   const [herbRecipeResult, setHerbRecipeResult] = useState<ValidHerbRecipe[]>(
     [],
   );
-  const onFinish = (values: typeof searchForm) => {
+  const [loading, setLoading] = useState(false)
+  const onFinish = async (values: typeof searchForm) => {
     // eslint-disable-next-line no-console
-    console.log(values);
-    // TODO: 提供进度条显示
     // TODO: 添加查询到的配方总数
-    // TODO: 看看能不能降低查询时的卡顿
     // TODO: 拆分 form 和 list 组件
-    // typeof search === 'function' && search(searchForm);
-    const herbRecipes = findHerbRecipe(
-      values.targetEffects,
-      values.avoidEffects,
-    );
-    const sortedHerbRecipes = herbRecipes.sort(herbRecipeResultSorter);
-    setHerbRecipeResult(sortedHerbRecipes.slice(0, values.topCount));
+    setLoading(true);
+    // 使用 web workers 进行计算药剂配方，避免阻塞主线程
+    const herbRecipes = await calcHerbRecipesWithWorker(values);
+    setHerbRecipeResult(herbRecipes)
+    setLoading(false);
   };
   const targetHerbEffectsOptions = Object.keys(herbEffectTagSet)
     .sort(targetEffectTagSorter)
@@ -118,19 +138,28 @@ const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
             <h2
               style={{
                 textAlign: 'center',
+                marginBottom: 0
               }}>
               药草计算器
             </h2>
             <div>
+              <div style={{
+                float: 'right',
+                fontSize: 12,
+                color: 'gray'
+              }}>
+                Version {pkg.version}
+              </div>
+              <div style={{ clear: 'both' }}></div>
+            </div>
+            <div>
               <hr />
-              作者：泪随樱花落
-              <br />
-              QQ：346014945
+              作者：泪随樱花落<span style={{ marginLeft: '1rem' }}></span>QQ：346014945
               <br />
               目前还在不断完善中（佛系更新ing），如果有什么好的建议或者发现了
               bug，欢迎联系作者_(:з」∠)_
               <br />
-              PS: 查找配方时会卡顿，因为配方数量比较大（取决于选择的期望的效果和排除的效果），稍等一会即可
+              PS: 查找配方可能会慢一点，因为配方数量比较大（取决于选择的期望的效果和排除的效果），稍等一会即可
               <hr />
             </div>
             <Form.Item
@@ -186,7 +215,7 @@ const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
               <InputNumber min={1} keyboard={true} />
             </Form.Item>
             <Form.Item {...tailLayout}>
-              <Button type="primary" htmlType="submit">
+              <Button type="primary" htmlType="submit" loading={loading}>
                 查找配方
               </Button>
             </Form.Item>
@@ -194,7 +223,7 @@ const HerbRecipeCalculator: FC<HerbRecipeCalculatorProps> = () => {
         </div>
         <hr />
         <div>
-          <h3>配方列表:</h3>
+          <h3>药水配方列表:</h3>
           <ul style={{ listStyleType: 'decimal' }}>
             {/* TODO: 做成卡片样式 */}
             {herbRecipeResult.map(herbRecipeInfo => {
